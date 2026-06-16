@@ -1,0 +1,127 @@
+import time
+import os
+import sys
+from datetime import datetime, timedelta
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+def cargar_configuracion(archivo):
+    config = {}
+    ruta_script = os.path.dirname(os.path.abspath(__file__))
+    ruta_archivo = os.path.join(ruta_script, archivo)
+    if not os.path.exists(ruta_archivo): return None
+    with open(ruta_archivo, "r", encoding="utf-8") as f:
+        for linea in f:
+            linea = linea.strip()
+            if "=" in linea and not linea.startswith("#"):
+                clave, valor = linea.split("=", 1)
+                config[clave.strip()] = valor.strip()
+    return config
+
+config = cargar_configuracion("config.txt")
+if not config: sys.exit(1)
+
+USER = config.get("USER")
+PASSWORD = config.get("PASSWORD")
+URL_ACCESO = "https://masqvidapaterna.deporsite.net/reserva-clases"
+HORAS_TARGET = [h.strip() for h in config.get("HORAS", "").split(",") if h]
+FILTROS = [f.strip().upper() for f in config.get("FILTROS", "").split(",") if f]
+CUANDO = config.get("CUANDO", "hoy")
+PALABRA_BUSQUEDA = "Paterna"
+
+def calcular_fechas(opcion):
+    hoy = datetime.now()
+    if opcion == "mañana": target = hoy + timedelta(days=1)
+    elif opcion == "pasado mañana": target = hoy + timedelta(days=2)
+    else: target = hoy
+    return target.strftime("%d/%m/%Y"), target.strftime("%Y-%m-%d")
+
+def seleccionar_centro(driver, wait):
+    try:
+        # Verificamos si ya estamos en el centro correcto mirando el texto del botón
+        btn_centro = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".cambiar-centro-btn")))
+        if PALABRA_BUSQUEDA.upper() in btn_centro.text.upper():
+            return True
+            
+        driver.execute_script("arguments[0].click();", btn_centro)
+        time.sleep(1)
+        input_bus = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@placeholder='Encuentra Tu Centro']")))
+        input_bus.clear()
+        input_bus.send_keys(PALABRA_BUSQUEDA)
+        time.sleep(2)
+        xpath_res = f"//a[contains(translate(., 'abc', 'ABC'), '{PALABRA_BUSQUEDA.upper()}')]"
+        resultado = wait.until(EC.element_to_be_clickable((By.XPATH, xpath_res)))
+        resultado.click()
+        time.sleep(6) 
+        return True
+    except: return False
+
+def ejecutar():
+    fecha_display, fecha_data = calcular_fechas(CUANDO)
+    logradas = 0
+    driver = webdriver.Chrome()
+    wait = WebDriverWait(driver, 15)
+
+    try:
+        driver.get("https://masqvidapaterna.deporsite.net/loginmenu")
+        wait.until(EC.presence_of_element_located((By.ID, "email"))).send_keys(USER)
+        driver.find_element(By.ID, "password").send_keys(PASSWORD)
+        driver.find_element(By.ID, "enviarFormulario").click()
+        time.sleep(2)
+
+        driver.get(URL_ACCESO)
+
+        for i, hora in enumerate(HORAS_TARGET):
+            # CAMBIO CRÍTICO: Asegurar el centro correcto en cada iteración
+            seleccionar_centro(driver, wait)
+            
+            print(f"\n🔍 Procesando sesión de las {hora}...")
+            try:
+                xpath_sesion = (
+                    f"//div[contains(@class, 'clase-selector') and @data-idfecha='{fecha_data}']"
+                    f"[.//div[@class='hora' and contains(text(), '{hora}')]]"
+                )
+                for f in FILTROS:
+                    xpath_sesion += f"[contains(translate(., 'abc', 'ABC'), '{f}')]"
+
+                sesion = wait.until(EC.visibility_of_element_located((By.XPATH, xpath_sesion)))
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sesion)
+                time.sleep(1)
+                driver.execute_script("arguments[0].click();", sesion)
+                
+                xpath_inscribirme = "//a[contains(@class, 'btn-reservar') and contains(., 'Inscribirme')]"
+                btn_inscribir = wait.until(EC.element_to_be_clickable((By.XPATH, xpath_inscribirme)))
+                driver.execute_script("arguments[0].click();", btn_inscribir)
+                
+                xpath_confirmar = "//div[contains(@class, 'btn-siguiente')][contains(., 'Reservar')]"
+                btn_final = wait.until(EC.element_to_be_clickable((By.XPATH, xpath_confirmar)))
+                
+                print("🚀 Confirmando reserva final...")
+                driver.execute_script("arguments[0].click();", btn_final)
+                
+                time.sleep(8) 
+                print(f"✅ ¡RESERVA COMPLETADA para {hora}!")
+                logradas += 1
+                
+                if i < len(HORAS_TARGET) - 1:
+                    driver.get(URL_ACCESO)
+                    time.sleep(4)
+                else:
+                    print("⏳ Asegurando guardado de la última transacción...")
+                    time.sleep(5)
+                
+            except Exception:
+                print(f"❌ No se pudo localizar o reservar la clase de las {hora}.")
+                driver.get(URL_ACCESO) # Volver a la lista en caso de error
+                time.sleep(5)
+
+        return f"\n🏁 Proceso finalizado: {logradas} reserva(s) realizada(s)."
+
+    finally:
+        time.sleep(2)
+        driver.quit()
+
+if __name__ == "__main__":
+    print(ejecutar())
