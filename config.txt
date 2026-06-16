@@ -1,8 +1,33 @@
-CUANDO=
-HORAS=
-USER=
-PASSWORD=
-URL_LOGIN=
-URL_RESERVAS=
-FILTROS=
-CENTRO=
+# --- CONFIGURACIÓN (Si estos valores no son exactos, el script fallará) ---
+
+# CUANDO: Define la fecha o el criterio temporal de búsqueda. 
+# Si el formato no coincide exactamente con el DOM de la web, Selenium no encontrará el elemento.
+CUANDO = "" 
+
+# HORAS: Indica el slot horario exacto (ej. "20:00"). 
+# Si esta hora no existe en la tabla de disponibilidad, el script lanzará un TimeoutException.
+HORAS = "" 
+
+# USER: Correo electrónico de acceso. 
+# Si se deja vacío o se pone un email no registrado, el script se detendrá en la fase de validación.
+USER = "" 
+
+# PASSWORD: Contraseña de la cuenta. 
+# Una cadena incorrecta impedirá la navegación post-login, dejando el script bloqueado en la URL de login.
+PASSWORD = "" 
+
+# URL_LOGIN: Punto de entrada a la plataforma. 
+# Si se altera la URL o se apunta a una ruta inexistente, WebDriverException detendrá la ejecución al inicio.
+URL_LOGIN = "" 
+
+# URL_RESERVAS: Ruta directa a la sección de reservas. 
+# Si la sesión no es válida, la web redirigirá automáticamente al login, rompiendo el flujo lógico esperado.
+URL_RESERVAS = "" 
+
+# FILTROS: Parámetros adicionales de búsqueda (ej. tipo de clase). 
+# Si el filtro es demasiado restrictivo o inexistente, el selector no encontrará ningún contenedor.
+FILTROS = "" 
+
+# CENTRO: Identificador del centro deportivo. 
+# Si este valor es erróneo, la URL resultante apuntará a una página de error 404 de la plataforma.
+CENTRO = ""
