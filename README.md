@@ -1,36 +1,46 @@
-MasQVida Reservation Automator
+# MasQVida Reservation Automator
 
 A Python-based automation script designed to streamline the reservation process on the MasQVida platform. This tool utilizes Selenium WebDriver to handle authentication and interact with dynamic calendar elements, ensuring efficient and repeatable booking operations.
-Features
 
-    Automated Authentication: Securely logs into the platform using configurable credentials.
+## Core Features
 
-    Dynamic Interaction: Uses WebDriverWait and expected_conditions to reliably handle JavaScript-rendered elements.
+* **Automated Authentication:** Securely logs into the platform using external configuration files (no hardcoded credentials).
+* **Dynamic Interaction:** Uses explicit `WebDriverWait` and `expected_conditions` to reliably handle JavaScript-rendered elements and prevent race conditions.
+* **Precise Targeting:** Employs advanced XPath selectors to pinpoint specific time slots and locations within the reservation grid.
+* **Robust Error Handling:** Implements comprehensive Object-Oriented try-except-finally blocks to manage connection timeouts, missing elements, and unexpected session interruptions while ensuring proper browser cleanup.
 
-    Precise Targeting: Employs advanced XPath selectors to pinpoint specific time slots within the reservation grid.
+## Technical Stack
 
-    Robust Error Handling: Implements comprehensive try-except-finally blocks to manage connection timeouts, missing elements, and unexpected session interruptions, ensuring proper browser cleanup.
+* **Language:** Python 3.x
+* **Library:** Selenium WebDriver
+* **Selectors:** XPath, CSS Selectors, By.ID
 
-Prerequisites
+## Prerequisites
 
-    Python 3.x
+1. Python 3.8+ installed.
+2. Google Chrome Browser installed.
+3. Required Python libraries:
+   ```bash
+   pip install selenium
 
-    Google Chrome Browser
+Configuration
 
-    ChromeDriver (installed automatically via webdriver-manager or present in your PATH)
+The script relies on an external configuration file. Create a file named config.txt in the root directory of the script with the following format:
+Plaintext
 
-    Selenium library:
-    Bash
+USER=your_email@example.com
+PASSWORD=your_secure_password
+HORAS=18:00, 19:00
+FILTROS=Padel, Tenis
+CUANDO=hoy
 
-    pip install selenium
+    USER / PASSWORD: Your MasQVida login credentials.
 
+    HORAS: Comma-separated list of target class hours.
 
-## Configuration
-Edit the **CONFIGURATION** section in `main.py` before running:
-```python
-URL = "https://reservas.masqvida.es/paterna/login"
-USER = "YOUR_EMAIL"
-PASSWORD = "YOUR_PASSWORD"
+    FILTROS: Comma-separated list of keywords to filter classes.
+
+    CUANDO: Target day (hoy, mañana, or pasado mañana).
 
 Usage
 
@@ -38,11 +48,3 @@ Run the script directly from your terminal:
 Bash
 
 python main.py
-
-Technical Stack
-
-    Language: Python
-
-    Library: Selenium WebDriver
-
-    Selectors: XPath, By.NAME, By.PARTIAL_LINK_TEXT
