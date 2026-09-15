@@ -1,5 +1,9 @@
 # MasQVida Reservation Automator
 
+![Python](https://img.shields.io/badge/Python-3.8+-3776AB?logo=python&logoColor=white)
+![Selenium](https://img.shields.io/badge/Selenium-WebDriver-43B02A?logo=selenium&logoColor=white)
+![Automation](https://img.shields.io/badge/Automation-Web_Scraping-blue)
+
 A Python-based automation script designed to streamline the reservation process on the MasQVida platform. This tool utilizes Selenium WebDriver to handle authentication and interact with dynamic calendar elements, ensuring efficient and repeatable booking operations.
 
 ## Core Features
